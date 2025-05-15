@@ -110,7 +110,18 @@
                     <td>{{ note['shift'] }}</td>
                     <td>{{ note['operator'] }}</td>
                     <td>{{ note['product_no'] }}</td>
-                    <td>{{ note['note'] }}</td>
+                    <td>
+                        <!-- {% if note['note'] == '問題なし' %}
+                        ✅ {{ note['note'] }}
+                        {% else %}
+                        ⚠️ {{ note['note'] }}
+                        {% endif %} -->
+                        {% if note['note'] == '問題なし' %}
+                        <span class="badge bg-success">✅ 問題なし</span>
+                        {% else %}
+                        <span class="badge bg-danger">⚠️ {{ note['note'] }}</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="{{ url_for('show', id=note['id']) }}" class="btn btn-warning">詳細</a>
                     </td>

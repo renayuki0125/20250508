@@ -34,5 +34,26 @@ def show(id):
     return render_template("show.html", note=note)
 
 
+@app.route("/update/<int:id>", methods=["POST"])
+def update_note(id):
+    additional_note = request.form["additional_note"]
+    conn = get_connection_db()
+    c = conn.cursor()
+
+    # もとの note を取得
+    c.execute("SELECT note FROM work_notes WHERE id = ?", (id,))
+    original_note = c.fetchone()["note"]
+
+    # 追記（前の内容 + 改行 + 追記内容）
+    new_note = f"{original_note}\n---\n{additional_note}"
+
+    # 上書きではなく結合して保存
+    c.execute("UPDATE work_notes SET note = ? WHERE id = ?", (new_note, id))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("show", id=id))
+
+
 if __name__ == "__main__":
     app.run(port=8000, debug=True)

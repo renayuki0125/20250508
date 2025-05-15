@@ -31,6 +31,16 @@
                 <h5 class="card-title">申し送り内容:</h5>
                 <p class="card-text">{{ note['note'] }}</p>
 
+                <h4 class="mt-4">追記</h4>
+                <form method="post" action="{{ url_for('update_note', id=note['id']) }}">
+                    <div class="mb-3">
+                        <label for="additional_note" class="form-label">新しい申し送り内容を追記</label>
+                        <textarea class="form-control" id="additional_note" name="additional_note" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">追記する</button>
+                </form>
+
+
                 <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">戻る</a>
             </div>
         </div>
