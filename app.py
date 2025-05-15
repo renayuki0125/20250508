@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-from database import get_work_notes, add_work_note, show_work_note, get_filtered_work_notes
+from database import get_work_notes, add_work_note, show_work_note, get_filtered_work_notes, get_machine_nos
 
 app = Flask(__name__)
 
@@ -23,7 +23,7 @@ def index():
         start_date = request.args.get("start_date")
         end_date = request.args.get("end_date")
         work_notes = get_filtered_work_notes(machine_no, start_date, end_date)
-        # machine_nos = get_machine_nos()  # ← 機械№一覧
+        machine_nos = get_machine_nos()  # ← 機械№一覧
 
         return render_template("index.html", work_notes=work_notes)
 

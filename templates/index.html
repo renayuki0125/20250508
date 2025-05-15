@@ -15,16 +15,27 @@
             <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#addform">追加する</button>
         </div>
 
-        <!-- ✅ ここにフォームを追加 -->
+
+        <!-- 絞り込みフォーム -->
         <form method="get" class="row g-3 mb-4">
             <div class="col-md-3">
-                <input type="text" name="machine_no" class="form-control" placeholder="機械番号で検索">
+                <select name="machine_no" class="form-select">
+                    <option value="">すべての機械</option>
+                    <!-- {% for no in machine_nos %}
+                    <option value="{{ no }}" {% if request.args.get('machine_no')==no %}selected{% endif %}>
+                        {{ no }}
+                    </option>
+                    {% endfor %} -->
+                    {% for i in range(1, 21) %}
+                    <option value="{{ i }}" {% if request.args.get('machine_no')==(i | string) %}selected{% endif %}>{{ i }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="col-md-3">
-                <input type="date" name="start_date" class="form-control" placeholder="開始日">
+                <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
             </div>
             <div class="col-md-3">
-                <input type="date" name="end_date" class="form-control" placeholder="終了日">
+                <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-outline-primary">絞り込み</button>
@@ -33,10 +44,16 @@
         <div id="addform" class="collapse mb-4">
             <!-- 入力フォーム -->
             <form action="" method="post" class="row g-3 col-md-8 mx-auto">
-                <div class="form-group">
-                    <label for="machine_no">機械№</label>
-                    <input type="text" name="machine_no" id="machine_no" class="form-control" required>
+                <div class="mb-3">
+                    <label for="machine_no" class="form-label">機械番号</label>
+                    <select class="form-select" id="machine_no" name="machine_no" required>
+                        <option value="">選択してください</option>
+                        {% for i in range(1, 21) %}
+                        <option value="{{ i }}">{{ i }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+
                 <div class="form-group">
                     <label for="date">日付</label>
                     <input type="date" name="date" id="date" class="form-control" required>
