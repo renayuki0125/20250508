@@ -75,8 +75,15 @@
                     <input type="text" name="product_no" id="product_no" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="note">申し送り内容</label>
-                    <textarea name="note" id="note" rows="4" required class="form-control"></textarea>
+                    <label for="note" class="form-label">申し送り内容</label>
+                    <div class="d-flex align-items-start gap-3">
+
+                        <div class="form-check mt-1">
+                            <input type="checkbox" class="form-check-input" id="no_issue_check" onclick="setNoIssue()">
+                            <label class="form-check-label" for="no_issue_check">問題なし</label>
+                        </div>
+                        <textarea name="note" id="note" rows="4" class="form-control" required></textarea>
+                    </div>
                 </div>
                 <input type="submit" value="送信" class="btn btn-primary form-control">
             </form>
@@ -119,3 +126,17 @@
 </body>
 
 </html>
+
+
+<script>
+    function setNoIssue() {
+        const checkbox = document.getElementById("no_issue_check");
+        const note = document.getElementById("note");
+
+        if (checkbox.checked) {
+            note.value = "問題なし";
+        } else {
+            note.value = "";
+        }
+    }
+</script>
