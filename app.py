@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from database import get_work_notes, add_work_note, show_work_note, get_filtered_work_notes, get_machine_nos, get_connection_db
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -38,6 +39,10 @@ def show(id):
 @app.route("/update/<int:id>", methods=["POST"])
 def update_note(id):
     additional_note = request.form["additional_note"]
+
+    updater = request.form["updater"]  # フォームから追記者を受け取る
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn = get_connection_db()
     c = conn.cursor()
 
@@ -46,15 +51,19 @@ def update_note(id):
     original_note = c.fetchone()["note"]
 
     # 追記（前の内容 + 改行 + 追記内容）
-    new_note = f"{original_note}\n---\n{additional_note}"
+    new_note = f"{original_note}\n---\n【追記者】{updater}（{now}）\n{additional_note}"
 
     # 上書きではなく結合して保存
-    c.execute("UPDATE work_notes SET note = ? WHERE id = ?", (new_note, id))
+    c.execute("""
+        UPDATE work_notes
+        SET note = ?, updated_at = ?
+        WHERE id = ?
+    """, (new_note, now, id))
+
     conn.commit()
     conn.close()
 
     return redirect(url_for("show", id=id))
-
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
