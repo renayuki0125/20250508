@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
-from database import get_work_notes, add_work_note, show_work_note, get_filtered_work_notes, get_machine_nos
+from database import get_work_notes, add_work_note, show_work_note, get_filtered_work_notes, get_machine_nos, get_connection_db
+
 
 app = Flask(__name__)
 
