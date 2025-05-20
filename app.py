@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-from database import get_work_notes, add_work_note, show_work_note, get_filtered_work_notes, get_machine_nos, get_connection_db
+from database import get_work_notes, add_work_note, show_work_note, get_filtered_work_notes, get_machine_nos, get_connection_db, get_note_history
 from datetime import datetime
 
 
@@ -33,7 +33,8 @@ def index():
 @app.route("/show/<int:id>")
 def show(id):
     note = show_work_note(id)
-    return render_template("show.html", note=note)
+    histories = get_note_history(id)  # ✅ 履歴も取得
+    return render_template("show.html", note=note, histories=histories)
 
 
 @app.route("/update/<int:id>", methods=["POST"])
@@ -53,12 +54,24 @@ def update_note(id):
     # 追記（前の内容 + 改行 + 追記内容）
     new_note = f"{original_note}\n---\n【追記者】{updater}（{now}）\n{additional_note}"
 
-    # 上書きではなく結合して保存
+    # # 上書きではなく結合して保存
+    # c.execute("""
+    #     UPDATE work_notes
+    #     SET note = ?, updated_at = ?
+    #     WHERE id = ?
+    # """, (new_note, now, id))
+     # work_notes を更新
     c.execute("""
         UPDATE work_notes
-        SET note = ?, updated_at = ?
+        SET note = ?, updated_at = ?, updater = ?
         WHERE id = ?
-    """, (new_note, now, id))
+    """, (new_note, now, updater, id))
+
+    # ✅ 履歴テーブルにも保存
+    c.execute("""
+        INSERT INTO note_histories (note_id, note_text, updated_at, updated_by)
+        VALUES (?, ?, ?, ?)
+    """, (id, new_note, now, updater))
 
     conn.commit()
     conn.close()
@@ -67,3 +80,6 @@ def update_note(id):
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
+
+
+    

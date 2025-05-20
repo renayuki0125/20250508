@@ -100,32 +100,40 @@
                     <th>品番</th>
                     <th>申し送り内容</th>
                     <th>操作</th>
+                    <th>更新者</th>
+                    <th>更新日時</th>
                 </tr>
             </thead>
             <tbody>
                 {% for note in work_notes %}
                 <tr>
-                    <td>{{ note['machine_no'] }}</td>
-                    <td>{{ note['date'] }}</td>
-                    <td>{{ note['shift'] }}</td>
-                    <td>{{ note['operator'] }}</td>
-                    <td>{{ note['product_no'] }}</td>
+                    <td>{{ note['machine_no'] }}</td>   <!-- 機械№ -->
+                    <td>{{ note['date'] }}</td>         <!-- 日付 -->
+                    <td>{{ note['shift'] }}</td>        <!-- 勤務帯 -->
+                    <td>{{ note['operator'] }}</td>     <!-- 担当者 -->
+                    <td>{{ note['product_no'] }}</td>   <!-- 品番 -->
+
+                    <!-- ✅ 申し送り内容 -->
                     <td>
-                        <!-- {% if note['note'] == '問題なし' %}
-                        ✅ {{ note['note'] }}
-                        {% else %}
-                        ⚠️ {{ note['note'] }}
-                        {% endif %} -->
                         {% if note['note'] == '問題なし' %}
                         <span class="badge bg-success">✅ 問題なし</span>
                         {% else %}
                         <span class="badge bg-danger">⚠️ {{ note['note'] }}</span>
                         {% endif %}
                     </td>
+
+                    <!-- ✅ 操作 -->
                     <td>
                         <a href="{{ url_for('show', id=note['id']) }}" class="btn btn-warning">詳細</a>
                     </td>
+
+                    <!-- ✅ 更新者 -->
+                    <td>{{ note.updater or '-' }}</td>
+
+                    <!-- ✅ 更新日時 -->
+                    <td>{{ note.updated_at or '-' }}</td>
                 </tr>
+
                 {% endfor %}
             </tbody>
 

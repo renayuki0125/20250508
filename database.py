@@ -55,7 +55,11 @@ def get_filtered_work_notes(machine_no=None, start_date=None, end_date=None):
     conn = get_connection_db()
     c = conn.cursor()
 
-    query = "SELECT * FROM work_notes WHERE 1=1"
+    query = """
+        SELECT id, machine_no, date, shift, operator, product_no, note, updater, updated_at
+        FROM work_notes
+        WHERE 1=1
+    """
     params = []
 
     if machine_no:
@@ -68,8 +72,37 @@ def get_filtered_work_notes(machine_no=None, start_date=None, end_date=None):
         query += " AND date <= ?"
         params.append(end_date)
 
-    query += " ORDER BY date DESC, id DESC"
+    query += " ORDER BY date DESC"
+
     c.execute(query, params)
-    rows = c.fetchall()
+    work_notes = c.fetchall()
     conn.close()
-    return rows
+    return work_notes
+
+
+
+# def get_note_history(note_id):
+#     conn = get_connection_db()
+#     c = conn.cursor()
+#     c.execute("""
+#         SELECT note_text, updated_at, updated_by
+#         FROM note_histories
+#         WHERE note_id = ?
+#         ORDER BY updated_at DESC
+#     """, (note_id,))
+#     return c.fetchall()
+
+
+def get_note_history(note_id):
+    conn = get_connection_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT note_text, updated_at, updated_by
+        FROM note_histories
+        WHERE note_id = ?
+        ORDER BY updated_at DESC
+    """, (note_id,))
+    histories = c.fetchall()
+    conn.close()
+    return histories
+
