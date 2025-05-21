@@ -13,29 +13,38 @@
         <h2 class="mb-4 text-center">申し送り詳細</h2>
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">機械№:</h5>
-                <p class="card-text">{{ note['machine_no'] }}</p>
+                <div class="row text-center mb-3">
+                    <div class="col-md-2">
+                        <strong>機械№</strong><br>
+                        {{ note['machine_no'] }}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>日付</strong><br>
+                        {{ note['date'] }}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>勤務帯</strong><br>
+                        {{ note['shift'] }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>担当者</strong><br>
+                        {{ note['operator'] }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>品番</strong><br>
+                        {{ note['product_no'] }}
+                    </div>
+                </div>
 
-                <h5 class="card-title">日付:</h5>
-                <p class="card-text">{{ note['date'] }}</p>
-
-                <h5 class="card-title">勤務帯:</h5>
-                <p class="card-text">{{ note['shift'] }}</p>
-
-                <h5 class="card-title">担当者:</h5>
-                <p class="card-text">{{ note['operator'] }}</p>
-
-                <h5 class="card-title">品番:</h5>
-                <p class="card-text">{{ note['product_no'] }}</p>
-
+                </div>
                 <h5 class="card-title">申し送り内容:</h5>
                 <p class="card-text">{{ note['note'] }}</p>
 
                 <h4 class="mt-4">追記</h4>
                 <form method="post" action="{{ url_for('update_note', id=note['id']) }}">
                     <div class="mb-3"></div>
+                        <input type="text" name="updater" placeholder="更新者名"><br>
                         <textarea name="additional_note" rows="4" cols="50"></textarea><br>
-                        <input type="text" name="updater" placeholder="更新者名"><br>    
                     </div>
                     <!-- <div class="mb-3">
                         <label for="additional_note" class="form-label">新しい申し送り内容を追記</label>
