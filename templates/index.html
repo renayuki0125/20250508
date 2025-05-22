@@ -101,30 +101,32 @@
                     <th>申し送り内容</th>
                     <th>操作</th>
                     <th>更新者</th>
+                    <th>確認</th>
                     <th>更新日時</th>
                 </tr>
             </thead>
             <tbody>
                 {% for note in work_notes %}
                 <tr>
-                    <td>{{ note['machine_no'] }}</td>   <!-- 機械№ -->
-                    <td>{{ note['date'] }}</td>         <!-- 日付 -->
-                    <td>{{ note['shift'] }}</td>        <!-- 勤務帯 -->
-                    <td>{{ note['operator'] }}</td>     <!-- 担当者 -->
-                    <td>{{ note['product_no'] }}</td>   <!-- 品番 -->
+                    <td>{{ note['machine_no'] }}</td> <!-- 機械№ -->
+                    <td>{{ note['date'] }}</td> <!-- 日付 -->
+                    <td>{{ note['shift'] }}</td> <!-- 勤務帯 -->
+                    <td>{{ note['operator'] }}</td> <!-- 担当者 -->
+                    <td>{{ note['product_no'] }}</td> <!-- 品番 -->
 
                     <!-- 折り返し+幅制限（重要！） -->
                     <!-- <td style="max-width: 200px; word-break: break-word; white-space: normal;"> -->
-                        {% set lines = note['note'].split('\n') %}
-                        {% set last_note = lines[-1] %}
-                        <td style="max-width: 200px; word-break: break-word; white-space: normal;">
-                            {% if '問題なし' in last_note %}
-                                <span class="badge bg-success">✅ 問題なし</span>
-                            {% else %}
-                                <span class="badge bg-danger">⚠️ {{ last_note }}</span>
-                            {% endif %}
-                        </td>   
-                    
+                    {% set lines = note['note'].split('\n') %}
+                    {% set last_note = lines[-1] %}
+                    <td style="max-width: 200px; word-break: break-word; white-space: normal;">
+                        {% if '問題なし' in last_note %}
+                        <span class="badge bg-success">✅ 問題なし</span>
+                        {% else %}
+                        <span class="badge bg-danger">⚠️ {{ last_note }}</span>
+                        {% endif %}
+                    </td>
+
+
 
 
                     <!-- ✅ 操作 -->
@@ -134,6 +136,18 @@
 
                     <!-- ✅ 更新者 -->
                     <td>{{ note.updater or '-' }}</td>
+                    <td>
+                        {% if note['status'] == 'no_issue' %}
+                        ✅ 問題なし
+                        {% elif note['status'] == 'resolved' %}
+                        ✅ 対応済
+                        {% elif note['status'] == 'has_issue' %}
+                        ⚠️ 要対応
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+
 
                     <!-- ✅ 更新日時 -->
                     <td>{{ note.updated_at or '-' }}</td>

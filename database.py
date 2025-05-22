@@ -27,14 +27,20 @@ def get_work_notes():
 
 # 作業申し送りを1件追加
 def add_work_note(machine_no, date, shift, operator, product_no, note):
+    # noteの内容から status を判定
+    if "問題なし" in note:
+        status = "no_issue"
+    else:
+        status = "has_issue"
+
     conn = get_connection_db()
     c = conn.cursor()
     c.execute(
         """
-        INSERT INTO work_notes (machine_no, date, shift, operator, product_no, note)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO work_notes (machine_no, date, shift, operator, product_no, note, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     """,
-        (machine_no, date, shift, operator, product_no, note),
+        (machine_no, date, shift, operator, product_no, note, status),
     )
     conn.commit()
     conn.close()
@@ -80,7 +86,6 @@ def get_filtered_work_notes(machine_no=None, start_date=None, end_date=None):
     return work_notes
 
 
-
 # def get_note_history(note_id):
 #     conn = get_connection_db()
 #     c = conn.cursor()
@@ -96,13 +101,15 @@ def get_filtered_work_notes(machine_no=None, start_date=None, end_date=None):
 def get_note_history(note_id):
     conn = get_connection_db()
     c = conn.cursor()
-    c.execute("""
+    c.execute(
+        """
         SELECT note_text, updated_at, updated_by
         FROM note_histories
         WHERE note_id = ?
         ORDER BY updated_at DESC
-    """, (note_id,))
+    """,
+        (note_id,),
+    )
     histories = c.fetchall()
     conn.close()
     return histories
-
