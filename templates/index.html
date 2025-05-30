@@ -11,8 +11,9 @@
 </div>
 
 <!-- 絞り込みフォーム -->
-<form method="get" class="row g-3 mb-4">
+<form method="get" class="row g-3 mb-4">      
     <div class="col-md-3">
+        <label for="machine_no" class="form-label">機械№</label>
         <select name="machine_no" class="form-select">
             <option value="">すべての機械</option>
             {% for i in range(1, 21) %}
@@ -21,9 +22,11 @@
         </select>
     </div>
     <div class="col-md-3">
+        <label for="start_date" class="form-label">検索開始日</label>
         <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
     </div>
     <div class="col-md-3">
+        <label for="end_date" class="form-label">検索終了日</label>
         <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
     </div>
 
