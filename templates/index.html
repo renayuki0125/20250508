@@ -1,46 +1,47 @@
-<!DOCTYPE html>
-<html lang="ja">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>作業申し送り</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-</head>
+{% block title %}申し送り一覧{% endblock %}
 
-<body class="bg-light">
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+{% block content %}
+<h2 class="mb-4 text-center">申し送り一覧</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
             <h3>作業申し送り一覧</h3>
             <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#addform">追加する</button>
-        </div>
+</div>
+
+<!-- 絞り込みフォーム -->
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <select name="machine_no" class="form-select">
+            <option value="">すべての機械</option>
+            {% for i in range(1, 21) %}
+            <option value="{{ i }}" {% if request.args.get('machine_no')==(i | string) %}selected{% endif %}>{{ i }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
+    </div>
+    <div class="col-md-3">
+        <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
+    </div>
+
+    <div class="col-md-2">
+        <label for="resolved" class="form-label">対応状況</label>
+        <select name="resolved" class="form-select">
+            <option value="">すべて</option>
+            <option value="1" {% if request.args.get('resolved') == '1' %}selected{% endif %}>✅ 対応済</option>
+            <option value="0" {% if request.args.get('resolved') == '0' %}selected{% endif %}>❌ 未対応</option>
+        </select>
+    </div>
 
 
-        <!-- 絞り込みフォーム -->
-        <form method="get" class="row g-3 mb-4">
-            <div class="col-md-3">
-                <select name="machine_no" class="form-select">
-                    <option value="">すべての機械</option>
-                    <!-- {% for no in machine_nos %}
-                    <option value="{{ no }}" {% if request.args.get('machine_no')==no %}selected{% endif %}>
-                        {{ no }}
-                    </option>
-                    {% endfor %} -->
-                    {% for i in range(1, 21) %}
-                    <option value="{{ i }}" {% if request.args.get('machine_no')==(i | string) %}selected{% endif %}>{{ i }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
-            </div>
-            <div class="col-md-3">
-                <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-primary">絞り込み</button>
-            </div>
-        </form>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-primary">絞り込み</button>
+    </div>
+</form>
+
         <div id="addform" class="collapse mb-4">
             <!-- 入力フォーム -->
             <form action="" method="post" class="row g-3 col-md-8 mx-auto">
@@ -66,47 +67,80 @@
                         <option value="遅番">遅番</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label for="operator">担当者</label>
-                    <input type="text" name="operator" id="operator" class="form-control" required>
-                </div>
+                    <input type="text" name="operator" id="operator" class="form-control" required
+                        value="{{ session['user_name'] }}" readonly>
+                </div> -->
+
                 <div class="form-group">
                     <label for="product_no">品番</label>
                     <input type="text" name="product_no" id="product_no" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="note" class="form-label">申し送り内容</label>
-                    <div class="d-flex align-items-start gap-3">
+                    <div class="d-flex align-items-start gap-3 flex-wrap">
 
-                        <div class="form-check mt-1">
-                            <input type="checkbox" class="form-check-input" id="no_issue_check" onclick="setNoIssue()">
+                        <!-- 各種チェックボックス -->
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="no_issue_check" value="問題なし" onclick="updateNoteText(this)">
                             <label class="form-check-label" for="no_issue_check">問題なし</label>
                         </div>
-                        <textarea name="note" id="note" rows="4" class="form-control" required></textarea>
+
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="short_stop_check" value="チョコ停あり" onclick="updateNoteText(this)">
+                            <label class="form-check-label" for="short_stop_check">チョコ停あり</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="condition_change_check" value="条件変更" onclick="updateNoteText(this)">
+                            <label class="form-check-label" for="condition_change_check">条件変更</label>
+                        </div>
+                        <script>
+                            function updateNoteText(checkbox) {
+                                const textarea = document.getElementById("note");
+                                let lines = textarea.value.split("\n").filter(line => line.trim() !== "");
+
+                                // すでにチェックされた内容があるか？
+                                const index = lines.indexOf(checkbox.value);
+
+                                if (checkbox.checked) {
+                                    // チェックされたら追加（重複防止）
+                                    if (index === -1) lines.push(checkbox.value);
+                                } else {
+                                    // チェック外されたら削除
+                                    if (index !== -1) lines.splice(index, 1);
+                                }
+
+                                textarea.value = lines.join("\n");
+                            }
+                        </script>
+
+
+                        <!-- テキストエリア -->
+                        <textarea name="note" id="note" rows="4" class="form-control mt-2" required></textarea>
                     </div>
                 </div>
                 <input type="submit" value="送信" class="btn btn-primary form-control">
             </form>
         </div>
-
-        <!-- 一覧表 -->
-        <table class="table table-striped table-hover text-center table-info">
-            <thead>
-                <tr>
-                    <th>機械№</th>
-                    <th>日付</th>
-                    <th>勤務帯</th>
-                    <th>担当者</th>
-                    <th>品番</th>
-                    <th>申し送り内容</th>
-                    <th>操作</th>
-                    <th>更新者</th>
-                    <th>確認</th>
-                    <th>更新日時</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for note in work_notes %}
+<table class="table table-striped table-hover text-center table-info">
+    <thead>
+        <tr>
+            <th>機械№</th>
+            <th>日付</th>
+            <th>勤務帯</th>
+            <th>担当者</th>
+            <th>品番</th>
+            <th>申し送り内容</th>
+            <th>操作</th>
+            <th>更新者</th>
+            <th>確認</th>
+            <th>更新日時</th>
+        </tr>
+    </thead>
+    <tbody>
+         {% for note in work_notes %}
                 <tr>
                     <td>{{ note['machine_no'] }}</td> <!-- 機械№ -->
                     <td>{{ note['date'] }}</td> <!-- 日付 -->
@@ -125,14 +159,12 @@
                         <span class="badge bg-danger">⚠️ {{ last_note }}</span>
                         {% endif %}
                     </td>
-
-
-
-
-                    <!-- ✅ 操作 -->
+                
+                <!-- ✅ 操作 -->
                     <td>
                         <a href="{{ url_for('show', id=note['id']) }}" class="btn btn-warning">詳細</a>
                     </td>
+                    
 
                     <!-- ✅ 更新者 -->
                     <td>{{ note.updater or '-' }}</td>
@@ -147,34 +179,27 @@
                         -
                         {% endif %}
                     </td>
+                    <td>
+                        {% if note.resolved %}
+                            ✅
+                        {% else %}
+                            ❌
+                        {% endif %}
+                    </td>
 
 
                     <!-- ✅ 更新日時 -->
                     <td>{{ note.updated_at or '-' }}</td>
                 </tr>
-
-                {% endfor %}
+            {% endfor %}
+                
             </tbody>
 
         </table>
     </div>
+  
 
-    <!-- BootstrapのJS読み込み -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-</body>
-
-</html>
+    
 
 
-<script>
-    function setNoIssue() {
-        const checkbox = document.getElementById("no_issue_check");
-        const note = document.getElementById("note");
-
-        if (checkbox.checked) {
-            note.value = "問題なし";
-        } else {
-            note.value = "";
-        }
-    }
-</script>
+{% endblock %} 

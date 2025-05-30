@@ -1,4 +1,6 @@
 import sqlite3
+from datetime import datetime
+
 
 
 # データベース接続関数
@@ -26,7 +28,9 @@ def get_work_notes():
 
 
 # 作業申し送りを1件追加
-def add_work_note(machine_no, date, shift, operator, product_no, note):
+def add_work_note(machine_no, date, shift, operator, product_no, note, updater):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     # noteの内容から status を判定
     if "問題なし" in note:
         status = "no_issue"
@@ -35,34 +39,41 @@ def add_work_note(machine_no, date, shift, operator, product_no, note):
 
     conn = get_connection_db()
     c = conn.cursor()
-    c.execute(
-        """
-        INSERT INTO work_notes (machine_no, date, shift, operator, product_no, note, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """,
-        (machine_no, date, shift, operator, product_no, note, status),
-    )
+
+    # 新規レコードを挿入
+    c.execute("""
+        INSERT INTO work_notes (machine_no, date, shift, operator, product_no, note, status, updater, updated_at, resolved)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+    """, (machine_no, date, shift, operator, product_no, note, status, updater, now))
+
     conn.commit()
     conn.close()
+
 
 
 # IDで1件取得（詳細表示用）
 def show_work_note(note_id):
     conn = get_connection_db()
     c = conn.cursor()
-    c.execute("SELECT * FROM work_notes WHERE id = ?", (note_id,))
+    c.execute("""
+        SELECT id, machine_no, date, shift, operator, product_no, note, updater, updated_at, resolved
+        FROM work_notes
+        WHERE id = ?
+    """, (note_id,)
+    )
     row = c.fetchone()
     conn.close()
     return row
 
 
 # 絞り込み取得（機械番号・日付範囲）
-def get_filtered_work_notes(machine_no=None, start_date=None, end_date=None):
+def get_filtered_work_notes(machine_no=None, start_date=None, end_date=None, resolved=None):
     conn = get_connection_db()
     c = conn.cursor()
 
     query = """
-        SELECT id, machine_no, date, shift, operator, product_no, note, updater, updated_at
+        SELECT id, machine_no, date, shift, operator, product_no, note,
+               updater, updated_at, resolved  -- 追加！
         FROM work_notes
         WHERE 1=1
     """
@@ -77,6 +88,9 @@ def get_filtered_work_notes(machine_no=None, start_date=None, end_date=None):
     if end_date:
         query += " AND date <= ?"
         params.append(end_date)
+    if resolved is not None:
+        query += " AND resolved = ?"
+        params.append(resolved)
 
     query += " ORDER BY date DESC"
 
