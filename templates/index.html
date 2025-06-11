@@ -3,7 +3,7 @@
 {% block title %}申し送り一覧{% endblock %}
 
 {% block content %}
-<h2 class="mb-4 text-center">申し送り一覧</h2>
+
 
 <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>作業申し送り一覧</h3>
@@ -171,24 +171,27 @@
 
                     <!-- ✅ 更新者 -->
                     <td>{{ note.updater or '-' }}</td>
+                    
                     <td>
-                        {% if note['status'] == 'no_issue' %}
-                        ✅ 問題なし
-                        {% elif note['status'] == 'resolved' %}
-                        ✅ 対応済
+                        {% if note['resolved'] == 1 %}
+                            ✅ 対応済
+                        {% elif note['status'] == 'no_issue' %}
+                            ✅ 問題なし
                         {% elif note['status'] == 'has_issue' %}
-                        ⚠️ 要対応
+                            ⚠️ 要対応
                         {% else %}
-                        -
+                            -
                         {% endif %}
                     </td>
-                    <td>
+                    <!-- 対応ボタン表示（未対応のときだけ表示） -->
+
+                    <!-- <td>
                         {% if note.resolved %}
                             ✅
                         {% else %}
                             ❌
                         {% endif %}
-                    </td>
+                    </td> -->
 
 
                     <!-- ✅ 更新日時 -->

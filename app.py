@@ -1,18 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 from werkzeug.security import check_password_hash
-from database import (
-    get_work_notes,
-    add_work_note,
-    show_work_note,
-    get_filtered_work_notes,
-    get_machine_nos,
-    get_connection_db,
-    get_note_history,
-)
+import database3
 from datetime import datetime
 from werkzeug.security import generate_password_hash
-
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # セキュリティのため適当なランダム文字列を設定
@@ -21,8 +12,6 @@ def get_connection_db():
     conn = sqlite3.connect("todo.db")
     conn.row_factory = sqlite3.Row
     return conn
-
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -35,7 +24,6 @@ def login():
         c.execute("SELECT * FROM users WHERE staff_id = ?", (staff_id,))
         user = c.fetchone()
         conn.close()
-
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
             session["staff_id"] = user["staff_id"]
@@ -47,17 +35,13 @@ def login():
     else:
         return render_template("login.html")
     
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         staff_id = request.form["staff_id"]
         name = request.form["name"]
         password = request.form["password"]
-
         hashed_password = generate_password_hash(password)
-
         try:
             conn = get_connection_db()
             c = conn.cursor()
@@ -80,7 +64,6 @@ def index():
     # ✅ ログインしていない場合はログイン画面へリダイレクト
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
     if request.method == "POST":
         # 新規追加処理（今のままでOK）
         machine_no = request.form["machine_no"]
@@ -90,9 +73,8 @@ def index():
         product_no = request.form["product_no"]
         note = request.form["note"]
         updater = session.get("name")
-        add_work_note(machine_no, date, shift, operator, product_no, note, updater)
+        database3.add_work_note(machine_no, date, shift, operator, product_no, note, updater)
         return redirect(url_for("index"))
-
     else:
         # ✅ 絞り込み処理に変更
         machine_no = request.args.get("machine_no")
@@ -100,12 +82,11 @@ def index():
         end_date = request.args.get("end_date")
         resolved_str = request.args.get("resolved")
         resolved = int(resolved_str) if resolved_str in ["0", "1"] else None
-        work_notes = get_filtered_work_notes(machine_no, start_date, end_date, resolved)
-        machine_nos = get_machine_nos()  # ← 機械№一覧
+        work_notes = database3.get_filtered_work_notes(machine_no, start_date, end_date, resolved)
+        machine_nos = database3.get_machine_nos()  # ← 機械№一覧
 
         # return render_template("index.html", work_notes=work_notes)
         return render_template("index.html", work_notes=work_notes, machine_nos=machine_nos)
-
 
 @app.route("/show/<int:id>")
 def show(id):
@@ -113,22 +94,18 @@ def show(id):
     if "user_id" not in session:
         return redirect(url_for("login"))
     else:
-        note = show_work_note(id)
-        histories = get_note_history(id)  # ✅ 履歴も取得
+        note = database3.show_work_note(id)
+        histories = database3.get_note_history(id)  # ✅ 履歴も取得
         return render_template("show.html", note=note, histories=histories)
-
 
 @app.route("/update/<int:id>", methods=["POST"])
 def update_note(id):
     # ✅ ログインしていない場合はログイン画面へリダイレクト
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
     else:
         additional_note = request.form["additional_note"]
         updater = session.get("name")  # ログインユーザー名を自動で取得
-
-
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         conn = get_connection_db()
         c = conn.cursor()
@@ -168,8 +145,6 @@ def update_note(id):
         return redirect(url_for("show", id=id))
 
 
-
-
 @app.route("/resolve_note/<int:id>", methods=["POST"])
 def resolve_note(id):
     if "user_id" not in session:
@@ -177,7 +152,7 @@ def resolve_note(id):
 
     updater = session.get("name")
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    print(updater, now, updater, id)
     conn = get_connection_db()
     c = conn.cursor()
 
@@ -187,9 +162,10 @@ def resolve_note(id):
         SET resolved = 1,
             resolved_by = ?,
             updated_at = ?,
-            updater = ?
+            updater = ?,
+            status = 'resolved'
         WHERE id = ?
-    """, (updater, now, updater, id))
+    """, (updater, now, updater, id,))
 
     conn.commit()
     conn.close()
@@ -197,20 +173,9 @@ def resolve_note(id):
     flash("処置済みにしました", "success")
     return redirect(url_for("show", id=id))
 
-
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
-
-
-
-
-
-
-
-
-
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
