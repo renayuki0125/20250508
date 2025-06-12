@@ -4,10 +4,11 @@
 
 {% block content %}
 
-
 <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>作業申し送り一覧</h3>
+                
             <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#addform">追加する</button>
+            
 </div>
 
 <!-- 絞り込みフォーム -->
@@ -37,10 +38,10 @@
             <option value="1" {% if request.args.get('resolved') == '1' %}selected{% endif %}>✅ 対応済</option>
             <option value="0" {% if request.args.get('resolved') == '0' %}selected{% endif %}>❌ 未対応</option>
         </select>
+        
     </div>
 
-
-    <div class="col-md-2">
+    <div class="col-md-1">
         <button type="submit" class="btn btn-outline-primary">絞り込み</button>
     </div>
 </form>
@@ -183,18 +184,7 @@
                             -
                         {% endif %}
                     </td>
-                    <!-- 対応ボタン表示（未対応のときだけ表示） -->
-
-                    <!-- <td>
-                        {% if note.resolved %}
-                            ✅
-                        {% else %}
-                            ❌
-                        {% endif %}
-                    </td> -->
-
-
-                    <!-- ✅ 更新日時 -->
+                    
                     <td>{{ note.updated_at or '-' }}</td>
                 </tr>
             {% endfor %}

@@ -7,6 +7,7 @@ def get_connection_db():
     print("ok")
     return conn
 
+
 get_connection_db()
 
 def get_machine_nos():

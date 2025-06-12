@@ -1,64 +1,102 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask_login import login_required, current_user, LoginManager, login_user, logout_user
 import sqlite3
 from werkzeug.security import check_password_hash
 import database3
 from datetime import datetime
 from werkzeug.security import generate_password_hash
+from functools import wraps
+from models import User          # ← ここを書き換え
+
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # セキュリティのため適当なランダム文字列を設定
+
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+
+
 
 def get_connection_db():
     conn = sqlite3.connect("todo.db")
     conn.row_factory = sqlite3.Row
     return conn
 
-@app.route("/login", methods=["GET", "POST"])
+def is_admin():
+    return session.get('is_admin') == 1
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash("管理者のみアクセスできます。")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(int(user_id))
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == "POST":
-        staff_id = request.form["staff_id"]
-        password = request.form["password"]
+    if request.method == 'POST':
+        staff_id = request.form['staff_id']
+        password = request.form['password']
 
         conn = get_connection_db()
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE staff_id = ?", (staff_id,))
-        user = c.fetchone()
+        row = c.fetchone()
         conn.close()
-        if user and check_password_hash(user["password_hash"], password):
-            session["user_id"] = user["id"]
-            session["staff_id"] = user["staff_id"]
-            session["name"] = user["name"]
-            return redirect(url_for("index"))
+
+        if row and check_password_hash(row['password_hash'], password):
+            user = User(row['id'], row['staff_id'], row['name'], row['password_hash'], row['is_admin'])
+            login_user(user)
+            # flash("ログインしました。")
+            return redirect(url_for('index'))
         else:
-            flash("社員番号またはパスワードが正しくありません。")
-            return redirect(url_for("login"))
-    else:
-        return render_template("login.html")
+            flash("社員番号またはパスワードが間違っています。")
+            return redirect(url_for('login'))
+
+    return render_template("login.html")
+
     
 @app.route("/register", methods=["GET", "POST"])
+@login_required
 def register():
+    if not is_admin():
+        flash("この機能にアクセスできません。")
+        return redirect(url_for("login"))
+
+
     if request.method == "POST":
         staff_id = request.form["staff_id"]
-        name = request.form["name"]
+        name = request.form["user_name"]
         password = request.form["password"]
         hashed_password = generate_password_hash(password)
         try:
             conn = get_connection_db()
             c = conn.cursor()
             c.execute("""
-                INSERT INTO users (staff_id, name, password_hash)
-                VALUES (?, ?, ?)
-            """, (staff_id, name, hashed_password))
+                INSERT INTO users (staff_id, name, password_hash, is_admin)
+                VALUES (?, ?, ?, ?)
+            """, (staff_id, name, hashed_password, is_admin))
             conn.commit()
             conn.close()
-            flash("登録が完了しました。ログインしてください。")
+            flash("登録が完了しました。")
             return redirect(url_for("login"))
         except sqlite3.IntegrityError:
             flash("この社員番号はすでに登録されています。")
             return redirect(url_for("register"))
     else:
-        return render_template("register.html")    
-
+        return render_template("register.html")
 @app.route("/", methods=["GET", "POST"])
 def index():
     # ✅ ログインしていない場合はログイン画面へリダイレクト
@@ -69,10 +107,10 @@ def index():
         machine_no = request.form["machine_no"]
         date = request.form["date"]
         shift = request.form["shift"]
-        operator = session.get("name")  # ログイン中のユーザー名を担当者として記録
+        operator = session.get("user_name")  # ログイン中のユーザー名を担当者として記録
         product_no = request.form["product_no"]
         note = request.form["note"]
-        updater = session.get("name")
+        updater = session.get("user_name")
         database3.add_work_note(machine_no, date, shift, operator, product_no, note, updater)
         return redirect(url_for("index"))
     else:
@@ -86,7 +124,10 @@ def index():
         machine_nos = database3.get_machine_nos()  # ← 機械№一覧
 
         # return render_template("index.html", work_notes=work_notes)
-        return render_template("index.html", work_notes=work_notes, machine_nos=machine_nos)
+        
+        return render_template("index.html", work_notes=work_notes, machine_nos=machine_nos, name=session['user_name'])
+
+
 
 @app.route("/show/<int:id>")
 def show(id):
@@ -105,7 +146,7 @@ def update_note(id):
         return redirect(url_for("login"))
     else:
         additional_note = request.form["additional_note"]
-        updater = session.get("name")  # ログインユーザー名を自動で取得
+        updater = session.get("user_name")  # ログインユーザー名を自動で取得
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         conn = get_connection_db()
         c = conn.cursor()
@@ -150,7 +191,7 @@ def resolve_note(id):
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    updater = session.get("name")
+    updater = session.get("user_name")
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(updater, now, updater, id)
     conn = get_connection_db()
@@ -173,9 +214,112 @@ def resolve_note(id):
     flash("処置済みにしました", "success")
     return redirect(url_for("show", id=id))
 
+
+
 @app.route("/logout")
 def logout():
-    session.clear()
+    logout_user()
+    flash("ログアウトしました。")
+    return redirect(url_for("login"))
+
+
+
+@app.route('/admin/users')
+@login_required
+@admin_required
+def admin_users():
+    conn = get_connection_db()
+    c = conn.cursor()
+    c.execute("SELECT id, staff_id, name, is_admin FROM users")
+    users = c.fetchall()
+    conn.close()
+    return render_template("admin_users.html", users=users)
+
+@app.route('/admin/delete/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    conn = get_connection_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    flash("ユーザーを削除しました")
+    return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/register', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_register():
+    if request.method == 'POST':
+        staff_id = request.form['staff_id']
+        name = request.form['name']
+        password = request.form['password']
+        is_admin_flag = int(request.form.get('is_admin', 0))
+        hashed_password = generate_password_hash(password)
+
+        try:
+            conn = get_connection_db()
+            c = conn.cursor()
+            c.execute("""
+                INSERT INTO users (staff_id, name, password_hash, is_admin)
+                VALUES (?, ?, ?, ?)
+            """, (staff_id, name, hashed_password, is_admin_flag))
+            conn.commit()
+            conn.close()
+            flash("ユーザーを登録しました")
+            return redirect(url_for('admin_users'))
+        except sqlite3.IntegrityError:
+            flash("社員番号がすでに存在します")
+            return redirect(url_for('admin_register'))
+
+    return render_template("admin_register.html")
+
+
+@app.route('/admin/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user(user_id):
+    conn = get_connection_db()
+    c = conn.cursor()
+
+    # ユーザー情報取得
+    c.execute("SELECT id, staff_id, name, is_admin FROM users WHERE id = ?", (user_id,))
+    user = c.fetchone()
+
+    if not user:
+        flash("ユーザーが見つかりません。")
+        return redirect(url_for('admin_users'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        is_admin_flag = int(request.form.get('is_admin', 0))
+        password = request.form['password']
+
+        # パスワードが入力されていればハッシュ化して更新
+        if password:
+            hashed_password = generate_password_hash(password)
+            c.execute("""
+                UPDATE users
+                SET name = ?, is_admin = ?, password_hash = ?
+                WHERE id = ?
+            """, (name, is_admin_flag, hashed_password, user_id))
+        else:
+            c.execute("""
+                UPDATE users
+                SET name = ?, is_admin = ?
+                WHERE id = ?
+            """, (name, is_admin_flag, user_id))
+
+        conn.commit()
+        conn.close()
+
+        flash("ユーザー情報を更新しました。")
+        return redirect(url_for('admin_users'))
+
+    conn.close()
+    return render_template('admin_edit_user.html', user=user)
+
+
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
