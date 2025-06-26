@@ -20,11 +20,11 @@
                 <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm ms-2">ログアウト</a>
                 {% endif %}
 
-                {% if session.get('is_admin') == 1 %}
+                {% if user.is_admin == 1 %}
                     <a href="{{ url_for('admin_register') }}" class="btn btn-primary">ユーザー登録</a>
                 {% endif %}
                 
-                {% if session.get('is_admin') == 1 %}
+                {% if user.is_admin == 1 %}
                     <a href="{{ url_for('admin_users') }}" class="btn btn-primary">ユーザー一覧</a>
                 {% endif %}
             </div>

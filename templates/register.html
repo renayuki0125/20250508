@@ -29,6 +29,45 @@
             <label for="password" class="form-label">パスワード</label>
             <input type="password" name="password" class="form-control" required>
         </div>
+        <div class="mb-3">
+            <label for="approval_level" class="form-label">承認レベル（役職）</label>
+            <select class="form-select" id="approval_level" name="approval_level" required>
+                <option value="1">一般</option>
+                <option value="2">班長</option>
+                <option value="3">係長</option>
+                <option value="4">主任</option>
+                <option value="5">工場長</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="approval_order" class="form-label">承認順序</label>
+            <select class="form-select" id="approval_order" name="approval_order" required>
+                <option value="1">1（最初）</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5（最終）</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="role_level" class="form-label">役職レベル</label>
+            <select class="form-select" id="role_level" name="role_level" required>
+                <option value="1">一般</option>
+                <option value="2">班長</option>
+                <option value="3">係長</option>
+                <option value="4">主任</option>
+                <option value="5">工場長</option>
+                <option value="9">管理者</option>
+            </select>
+        </div>    
+        
+        <div class="mb-3">
+            <input type="hidden" name="is_admin" value="1">
+        </div>
+
+
         <button type="submit" class="btn btn-primary">登録する</button>
         <a href="{{ url_for('login') }}" class="btn btn-secondary">ログイン画面に戻る</a>
     </form>

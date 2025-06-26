@@ -99,6 +99,31 @@
         </ul>
 
 
+        <h4 class="mt-4">承認履歴</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>承認者</th>
+                        <th>承認順</th>
+                        <th>承認日時</th>
+                        <!-- <th>コメント</th>
+                        <th>日時</th> -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for approval in approvals %}
+                    <tr>
+                        <td>{{ approval.name }}</td>
+                        <td>{{ approval.approval_order }}</td>
+                        <!-- <td>{{ approval.comment or '-' }}</td> -->
+                        <td>{{ approval.approved_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+
+
         <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">戻る</a>
     </div>
     </div>

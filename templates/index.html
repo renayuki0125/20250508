@@ -128,23 +128,25 @@
                 <input type="submit" value="送信" class="btn btn-primary form-control">
             </form>
         </div>
-<table class="table table-striped table-hover text-center table-info">
-    <thead>
-        <tr>
-            <th>機械№</th>
-            <th>日付</th>
-            <th>勤務帯</th>
-            <th>担当者</th>
-            <th>品番</th>
-            <th>申し送り内容</th>
-            <th>操作</th>
-            <th>更新者</th>
-            <th>確認</th>
-            <th>更新日時</th>
-        </tr>
-    </thead>
-    <tbody>
-         {% for note in work_notes %}
+    <table class="table table-striped table-hover text-center table-info">
+        <thead>
+            <tr>
+                <th>機械№</th>
+                <th>日付</th>
+                <th>勤務帯</th>
+                <th>担当者</th>
+                <th>品番</th>
+                <th>申し送り内容</th>
+                <th>操作</th>
+                <th>更新者</th>
+                <th>確認</th>
+                <th>更新日時</th>
+                <th>最終確認</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            {% for note in notes %}
                 <tr>
                     <td>{{ note['machine_no'] }}</td> <!-- 機械№ -->
                     <td>{{ note['date'] }}</td> <!-- 日付 -->
@@ -167,7 +169,15 @@
                 <!-- ✅ 操作 -->
                     <td>
                         <a href="{{ url_for('show', id=note['id']) }}" class="btn btn-warning">詳細</a>
+                        <!-- {% if current_user.is_admin %}
+                            <a href="{{ url_for('mark_checked', id=note['id']) }}" class="btn btn-info">確認</a>
+                            <a href="{{ url_for('mark_completed', id=note['id']) }}" class="btn btn-success">完了</a>
+                        {% endif %}
+                                         -->
+                    
+                    
                     </td>
+
                     
 
                     <!-- ✅ 更新者 -->
@@ -184,8 +194,55 @@
                             -
                         {% endif %}
                     </td>
+
                     
                     <td>{{ note.updated_at or '-' }}</td>
+
+                    <td>
+                        {% set user_level = current_user.approval_level %}
+                        {% set already_approved_levels = approvals | map(attribute='approval_level') | list %}
+
+                        {% if user_level not in already_approved_levels %}
+                            {% if user_level == 2 %}
+                                <!-- ランク2（班長）は常に最初に承認可能 -->
+                                <form method="post" action="{{ url_for('approve_note', note_id=note.id) }}">
+                                    <button class="btn btn-primary">承認する</button>
+                                </form>
+                            {% elif user_level == 3 and 2 in already_approved_levels %}
+                                <!-- ランク3は、ランク2が承認済みなら表示 -->
+                                <form method="post" action="{{ url_for('approve_note', note_id=note.id) }}">
+                                    <button class="btn btn-primary">承認する</button>
+                                </form>
+                            {% elif user_level == 4 and 3 in already_approved_levels %}
+                                <!-- ランク4は、ランク3が承認済みなら表示 -->
+                                <form method="post" action="{{ url_for('approve_note', note_id=note.id) }}">
+                                    <button class="btn btn-primary">承認する</button>
+                                </form>
+                            {% elif user_level == 5 and 4 in already_approved_levels %}
+                                <!-- ランク5は、ランク4が承認済みなら表示 -->
+                                <form method="post" action="{{ url_for('approve_note', note_id=note.id) }}">
+                                    <button class="btn btn-primary">承認する</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if note.is_locked %}
+                            <span class="badge bg-secondary">ロック済み</span>
+                        {% else %}
+                            <!-- まだ承認していないなら承認ボタン表示 -->
+                            {% set approved_ids = note.approved_user_ids %}
+                            {% if current_user.id not in approved_ids %}
+                                <form method="post" action="{{ url_for('approve_note', note_id=note.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">確認</button>
+                                </form>
+                            {% else %}
+                                <span class="badge bg-success">✔ 確認済</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+
+
+
                 </tr>
             {% endfor %}
                 

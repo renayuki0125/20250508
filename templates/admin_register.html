@@ -25,10 +25,30 @@
                         <label class="form-label">パスワード</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" name="is_admin" value="1" class="form-check-input" id="adminCheck">
-                        <label class="form-check-label" for="adminCheck">管理者にする</label>
+                    <div class="mb-3">
+                        <label for="role_level" class="form-label">役職</label>
+                        <select class="form-select" id="role_level" name="role_level" required>
+                                <option value="1" {% if user.role_level == 1 %}selected{% endif %}>一般</option>
+                                <option value="2" {% if user.role_level == 2 %}selected{% endif %}>班長</option>
+                                <option value="3" {% if user.role_level == 3 %}selected{% endif %}>係長</option>
+                                <option value="4" {% if user.role_level == 4 %}selected{% endif %}>主任</option>
+                                <option value="5" {% if user.role_level == 5 %}selected{% endif %}>工場長</option>
+                                <option value="9" {% if user.role_level == 9 %}selected{% endif %}>管理者</option>
+                                
+                        </select>
                     </div>
+                    <div class="mb-3">
+                        <label for="approval_order" class="form-label">承認順序</label>
+                        <select class="form-select" id="approval_order" name="approval_order">
+                            <option value="1" {% if user["approval_order"] == 1 %}selected{% endif %}>1（最初）</option>
+                            <option value="2" {% if user["approval_order"] == 2 %}selected{% endif %}>2</option>
+                            <option value="3" {% if user["approval_order"] == 3 %}selected{% endif %}>3</option>
+                            <option value="4" {% if user["approval_order"] == 4 %}selected{% endif %}>4</option>
+                            <option value="5" {% if user["approval_order"] == 5 %}selected{% endif %}>5（最終）</option>
+                        </select>
+                    </div>
+                    
+
                     <button type="submit" class="btn btn-success w-100">登録する</button>
                     <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">申し送りへ戻る</a>
                 </form>

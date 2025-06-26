@@ -18,16 +18,22 @@
                 <th>操作</th>
             </tr>
         </thead>
+        
+            
+            
         <tbody>
+            
             {% for user in users %}
+            {% set role_map = {1: '一般', 2: '班長', 3: '係長', 4: '主任', 5: '工場長', 9: '管理者'} %}
+
             <tr>
-                <td>{{ user[0] }}</td>
-                <td>{{ user[1] }}</td>
-                <td>{{ user[2] }}</td>
-                <td>{{ '管理者' if user[3] == 1 else '一般' }}</td>
+                <td>{{ user.id }}</td>
+                <td>{{ user.staff_id }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ role_map.get(user['role_level'], '不明') }}</td>
                 <td class="d-flex gap-2">
-                    <a href="{{ url_for('edit_user', user_id=user[0]) }}" class="btn btn-sm btn-warning">編集</a>
-                    <form method="post" action="{{ url_for('delete_user', user_id=user[0]) }}" onsubmit="return confirm('本当に削除しますか？');">
+                    <a href="{{ url_for('edit_user', user_id=user.id) }}" class="btn btn-sm btn-warning">編集</a>
+                    <form method="post" action="{{ url_for('delete_user', user_id=user.id) }}" onsubmit="return confirm('本当に削除しますか？');">
                         <button type="submit" class="btn btn-danger btn-sm">削除</button>
                     </form>
                 </td>

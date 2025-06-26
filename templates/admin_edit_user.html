@@ -6,8 +6,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+    
 <div class="container mt-5">
     <h2>ユーザー情報編集</h2>
+
     <form method="post">
         <div class="mb-3">
             <label for="staff_id" class="form-label">社員番号</label>
@@ -18,12 +20,35 @@
             <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}" required>
         </div>
         <div class="mb-3">
-            <label for="is_admin" class="form-label">権限</label>
-            <select class="form-select" id="is_admin" name="is_admin">
-                <option value="0" {% if user.is_admin == 0 %}selected{% endif %}>一般</option>
-                <option value="1" {% if user.is_admin == 1 %}selected{% endif %}>管理者</option>
+            <label for="password" class="form-label">新しいパスワード（変更しない場合は空欄）</label>
+            <input type="password" class="form-control" id="password" name="password">
+        </div>
+
+        <div class="mb-3">
+            <label for="approval_level" class="form-label">承認レベル（役職）</label>
+            <select class="form-select" id="role_level" name="role_level" required>
+                <option value="1" {% if user.role_level == 1 %}selected{% endif %}>一般</option>
+                <option value="2" {% if user.role_level == 2 %}selected{% endif %}>班長</option>
+                <option value="3" {% if user.role_level == 3 %}selected{% endif %}>係長</option>
+                <option value="4" {% if user.role_level == 4 %}selected{% endif %}>主任</option>
+                <option value="5" {% if user.role_level == 5 %}selected{% endif %}>工場長</option>
+                <option value="9" {% if user.role_level == 9 %}selected{% endif %}>管理者</option>
             </select>
         </div>
+
+        <div class="mb-3">
+            <label for="approval_order" class="form-label">承認順序</label>
+            <select class="form-select" id="approval_order" name="approval_order">
+                <option value="1" {% if user["approval_order"] == 1 %}selected{% endif %}>1（最初）</option>
+                <option value="2" {% if user["approval_order"] == 2 %}selected{% endif %}>2</option>
+                <option value="3" {% if user["approval_order"] == 3 %}selected{% endif %}>3</option>
+                <option value="4" {% if user["approval_order"] == 4 %}selected{% endif %}>4</option>
+                <option value="5" {% if user["approval_order"] == 5 %}selected{% endif %}>5（最終）</option>
+                <option value="5" {% if user["role_level"] == 9 %}selected{% endif %}>管理者（最終）</option>
+            </select>
+        </div>
+
+        
         <button type="submit" class="btn btn-success">保存</button>
         <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">キャンセル</a>
     </form>
